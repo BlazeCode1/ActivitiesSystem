@@ -7,10 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.time.LocalTime;
@@ -79,6 +77,14 @@ public class Place {
     @CreationTimestamp
     private Instant created_at;
 
+    @Column(columnDefinition = "boolean not null default false")
+    private Boolean is_partner = false;
+
+    @Column(columnDefinition = "int not null default 0")
+    private Integer deal_percent = 0;   // 0..100
+
+    @Column(columnDefinition = "timestamp(6) null")
+    private Instant deal_until;
 
     private Integer count_visits;
     private Integer count_current_visitors;

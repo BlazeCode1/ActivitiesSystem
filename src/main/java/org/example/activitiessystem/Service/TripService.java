@@ -9,9 +9,9 @@ import org.example.activitiessystem.Repository.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -51,9 +51,30 @@ public class TripService {
                     if(place == null) throw new ApiException("Selected Place Not Found");
                     if(!place.getCategoryId().equals(trip.getCategoryId()))
                         throw new ApiException("Selected Place does not match Category");
+                    place.setCount_visits(place.getCount_visits() + 1);
+                    place.setCount_current_visitors(place.getCount_visits() + 1);
                 }
 
         tripRepository.save(trip);
+    }
+
+    public void finishTrip(Integer tripId,Integer userId){
+        Trip trip = tripRepository.findTripById(tripId);
+        if(trip == null)
+            throw new ApiException("Trip Not Found");
+        User user = userRepository.findUserById(userId);
+        if(user == null)
+            throw new ApiException("User Not found");
+        if(!userId.equals(trip.getUserId()))
+            throw new ApiException("User Id Not Correct for trip id");
+
+        Place place = placeRepository.findPlaceById(trip.getSelectedPlaceId());
+
+        if(place == null)
+            throw new ApiException("Trip did not select a place id");
+        place.setCount_current_visitors(place.getCount_current_visitors() - 1);
+        placeRepository.save(place);
+
     }
 
     public Map<String, String> shareTrip(Integer tripId) {
@@ -135,18 +156,36 @@ public class TripService {
     }
 
 
-    public Trip getMysteryTrip(Integer userId) {
-        User user = userRepository.findUserById(userId);
-        if (user == null) throw new ApiException("User not found");
 
-        List<Trip> tripsInDistrict = tripRepository.findByDistrict(user.getDistrict());
+    private void ensureSubscriber(Integer userId){
+        User u = userRepository.findUserById(userId);
+        if (u == null) throw new ApiException("User not found");
+        if (u.getIsSubscriber() == null || !u.getIsSubscriber())
+            throw new ApiException("Subscription required");
+    }
 
-        if (tripsInDistrict.isEmpty()) {
-            throw new ApiException("No trips found for your district");
+
+    public Place premiumMystery(Integer userId){
+        ensureSubscriber(userId);
+
+        User u = userRepository.findUserById(userId);
+        String district = u.getDistrict();
+
+        // Top-rated candidates in user’s district (favor partners first)
+        List<Place> candidates = placeRepository.findTopMysteryCandidates(district);
+
+        // Avoid places visited by this user in last 60 days
+        Instant cutoff = Instant.now().minus(java.time.Duration.ofDays(60));
+
+        for (Place p : candidates){
+            boolean revisitedRecently = tripRepository
+                    .existsByUserIdAndSelectedPlaceIdAndStartAfter(userId, p.getId(), cutoff);
+            if (!revisitedRecently){
+                return p; // first good match
+            }
         }
-
-        Random random = new Random();
-        return tripsInDistrict.get(random.nextInt(tripsInDistrict.size()));
+        if (candidates.isEmpty()) throw new ApiException("No candidates found in your district");
+        return candidates.get(0); // fallback
     }
 
 

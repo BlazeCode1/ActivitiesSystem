@@ -8,7 +8,6 @@ import org.example.activitiessystem.Service.TripService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/trip")
@@ -65,9 +64,15 @@ public class TripController {
         return ResponseEntity.ok(tripService.getSeasonalTrips(district));
     }
 
-    @PostMapping("/mystery/{userId}")
-    public ResponseEntity<?> getMysteryTrip(@PathVariable Integer userId) {
-        Trip trip = tripService.getMysteryTrip(userId);
-        return ResponseEntity.ok(trip);
+    @GetMapping("/mystery/premium/{userId}")
+    public ResponseEntity<?> premiumMystery(@PathVariable Integer userId){
+        return ResponseEntity.ok(tripService.premiumMystery(userId));
+    }
+
+
+    @GetMapping("/finish/{tripId}/{userId}")
+    public ResponseEntity<?> finishTrip(@PathVariable Integer tripId,@PathVariable Integer userId){
+        tripService.finishTrip(tripId,userId);
+        return ResponseEntity.ok(new ApiResponse("Trip Finished!"));
     }
 }

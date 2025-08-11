@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -108,4 +109,20 @@ public class PlaceService {
                 seasonalCurrentVisitorsThreshold
         );
     }
+
+    private void ensureSubscriber(Integer userId){
+        User u = userRepository.findUserById(userId);
+        if (u == null) throw new ApiException("User not found");
+        if (u.getIsSubscriber() == null || !u.getIsSubscriber())
+            throw new ApiException("Subscription required");
+    }
+
+
+
+    public List<Place> subscriberDiscounts(Integer userId, String district){
+        ensureSubscriber(userId);
+        Instant now = Instant.now();
+        return placeRepository.findByDistrictAndIsPartnerTrueAndDealPercentGreaterThanAndActive(district, 0, now);
+    }
+
 }

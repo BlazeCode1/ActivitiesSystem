@@ -5,10 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.activitiessystem.Api.ApiResponse;
 import org.example.activitiessystem.Model.Place;
-import org.example.activitiessystem.Repository.PlaceRepository;
 import org.example.activitiessystem.Service.PlaceService;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,6 +59,12 @@ public class PlaceController {
     @GetMapping("/events/seasonal/{district}")
     public List<Place> getSeasonalPlaces(@PathVariable String district) {
         return placeService.getSeasonalPlaces(district);
+    }
+
+    @GetMapping("/discounts/{userId}/{district}")
+    public ResponseEntity<?> subscriberDiscounts(@PathVariable Integer userId,
+                                                 @PathVariable String district){
+        return ResponseEntity.ok(placeService.subscriberDiscounts(userId, district));
     }
 
 }

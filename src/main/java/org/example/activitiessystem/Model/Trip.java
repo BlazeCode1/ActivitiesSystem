@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
@@ -46,11 +45,15 @@ public class Trip {
 
     @CreationTimestamp
     @Column(columnDefinition = "timestamp(6) not null default current_timestamp(6)")
-    private Instant createdAt;
+    private Instant start;
 
-    @UpdateTimestamp
-    @Column(columnDefinition = "timestamp(6) null")
-    private Instant updatedAt;
+
+    @CreationTimestamp
+    @Column(columnDefinition = "timestamp(6) not null default current_timestamp(6)")
+    private Instant finish;
+
+    @Column(columnDefinition = "boolean not null default false")
+    private Boolean isFinish = false;
 
     @Column(columnDefinition = "boolean not null default false")
     private Boolean isPublic = false;

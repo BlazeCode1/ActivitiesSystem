@@ -53,7 +53,7 @@ public class UserService {
     }
 
 
-    // ===== Subscription with POINTS =====
+
     public void subscribeWithPoints(Integer userId){
 
         User u = requireUser(userId);
@@ -88,7 +88,7 @@ public class UserService {
 
     public Map<String,Object> subscriptionStatus(Integer userId){
         User u = requireUser(userId);
-        HashMap<String,Object> m = new HashMap<String,Object>();
+        HashMap<String,Object> m = new HashMap<>();
         m.put("userId", u.getId());
         m.put("isSubscriber", u.getIsSubscriber() != null && u.getIsSubscriber());
         m.put("points", (u.getPoints() == null) ? 0 : u.getPoints());
