@@ -81,12 +81,14 @@ public class Place {
     private Boolean is_partner = false;
 
     @Column(columnDefinition = "int not null default 0")
-    private Integer deal_percent = 0;   // 0..100
+    private Integer deal_percent = 0;
 
     @Column(columnDefinition = "timestamp(6) null")
     private Instant deal_until;
 
+    @Column(columnDefinition = "int default 0")
     private Integer count_visits;
+    @Column(columnDefinition = "int default 0")
     private Integer count_current_visitors;
 
 

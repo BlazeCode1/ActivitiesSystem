@@ -28,7 +28,7 @@ public interface TripRepository extends JpaRepository<Trip,Integer> {
            select t.id, t.userId, t.selectedPlaceId, p.name, p.avgRating, t.start, t.imageUrl, t.categoryId
            from Trip t join Place p on p.id = t.selectedPlaceId
            where t.district = :district
-             and t.categoryId = :cat
+             and t.categoryId = :categoryId
            order by p.avgRating desc, t.start desc
            """)
     List<Object[]> topTripsByDistrictCategory(String district,

@@ -40,20 +40,27 @@ public class TripService {
     }
 
     public void createTrip(Trip trip){
-        if(userRepository.findUserById(trip.getUserId())==null)
+        if (userRepository.findUserById(trip.getUserId()) == null)
             throw new ApiException("User ID not found");
 
-        if(categoryRepository.findCategoryById(trip.getCategoryId()) == null){
+        if (categoryRepository.findCategoryById(trip.getCategoryId()) == null)
             throw new ApiException("Category Not Found For Trip");
+
+        if (trip.getSelectedPlaceId() != null){
+            Place place = placeRepository.findPlaceById(trip.getSelectedPlaceId());
+            if (place == null) throw new ApiException("Selected Place Not Found");
+            if (!place.getCategoryId().equals(trip.getCategoryId()))
+                throw new ApiException("Selected Place does not match Category");
+
+            // null-safe increments
+            int visits  = place.getCount_visits() == null ? 0 : place.getCount_visits();
+            int current = place.getCount_current_visitors() == null ? 0 : place.getCount_current_visitors();
+
+            place.setCount_visits(visits + 1);
+            place.setCount_current_visitors(current + 1);
+
+            placeRepository.save(place); // persist the counters
         }
-                if(trip.getSelectedPlaceId() != null){
-                    Place place = placeRepository.findPlaceById(trip.getSelectedPlaceId());
-                    if(place == null) throw new ApiException("Selected Place Not Found");
-                    if(!place.getCategoryId().equals(trip.getCategoryId()))
-                        throw new ApiException("Selected Place does not match Category");
-                    place.setCount_visits(place.getCount_visits() + 1);
-                    place.setCount_current_visitors(place.getCount_visits() + 1);
-                }
 
         tripRepository.save(trip);
     }
