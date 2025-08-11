@@ -53,19 +53,50 @@ public class PlaceService {
     }
 
     public void addPlace(Place place){
-        Category category = categoryRepository.findCategoryById(place.getCategoryId());
+        // Normalize
+        place.setName(place.getName().trim());
+        place.setDistrict(place.getDistrict().trim());
+        if (place.getContact_number() != null) place.setContact_number(place.getContact_number().trim());
+        if (place.getLocation() != null) place.setLocation(place.getLocation().trim());
+
+        // Check refs
+        if (categoryRepository.findCategoryById(place.getCategoryId()) == null)
+            throw new ApiException("Category not found");
+
         User user = userRepository.findUserById(place.getCreated_by_id());
-        if(category == null)
-            throw new ApiException("Category Not Found");
+        if (user == null) throw new ApiException("User not found");
+        if (!"admin".equalsIgnoreCase(user.getRole()))
+            throw new ApiException("Unauthorized: only admin can add places");
 
-        if(user == null)
-            throw new ApiException("User Not Found");
+        // Business validations
+        if (place.getOpen_time() != null && place.getClose_time() != null) {
+            // allow same-day only; if you support overnight, handle that separately
+            if (!place.getClose_time().isAfter(place.getOpen_time()))
+                throw new ApiException("close_time must be after open_time");
+        }
 
-        if(!user.getRole().equalsIgnoreCase("admin"))
-            throw new  ApiException("UnAuthorized to add");
+        // Price level whitelist (defense in depth)
+        String pl = place.getPrice_level();
+        if (pl == null || !(pl.equalsIgnoreCase("cheap") ||
+                pl.equalsIgnoreCase("medium") ||
+                pl.equalsIgnoreCase("expensive"))) {
+            throw new ApiException("Invalid price_level (cheap|medium|expensive)");
+        }
 
-        if(placeRepository.existsByNameAndDistrict(place.getName(), place.getDistrict()))
-            throw new ApiException("Place Already Added.");
+        // Duplicate checks (case-insensitive)
+        if (placeRepository.existsByNameIgnoreCaseAndDistrictIgnoreCase(place.getName(), place.getDistrict()))
+            throw new ApiException("Place already added (name,district)");
+
+        if (place.getLocation() != null &&
+                placeRepository.existsByLocation(place.getLocation()))
+            throw new ApiException("Place already added (location)");
+
+        // Defaults
+        if (place.getAvgRating() == null) place.setAvgRating(0.0);
+        if (place.getCount_visits() == null) place.setCount_visits(0);
+        if (place.getCount_current_visitors() == null) place.setCount_current_visitors(0);
+
+        // Persist
         placeRepository.save(place);
     }
 

@@ -65,23 +65,34 @@ public class TripService {
         tripRepository.save(trip);
     }
 
-    public void finishTrip(Integer tripId,Integer userId){
+    public void finishTrip(Integer tripId, Integer userId) {
         Trip trip = tripRepository.findTripById(tripId);
-        if(trip == null)
-            throw new ApiException("Trip Not Found");
+        if (trip == null) throw new ApiException("Trip not found");
+
         User user = userRepository.findUserById(userId);
-        if(user == null)
-            throw new ApiException("User Not found");
-        if(!userId.equals(trip.getUserId()))
-            throw new ApiException("User Id Not Correct for trip id");
+        if (user == null) throw new ApiException("User not found");
 
-        Place place = placeRepository.findPlaceById(trip.getSelectedPlaceId());
+        if (!userId.equals(trip.getUserId()))
+            throw new ApiException("User does not own this trip");
 
-        if(place == null)
-            throw new ApiException("Trip did not select a place id");
-        place.setCount_current_visitors(place.getCount_current_visitors() - 1);
+        Integer selPlaceId = trip.getSelectedPlaceId();
+        if (selPlaceId == null)
+            throw new ApiException("Trip has no selected place to finish");
+
+        Place place = placeRepository.findPlaceById(selPlaceId);
+        if (place == null)
+            throw new ApiException("Selected place not found");
+
+        int current = (place.getCount_current_visitors() == null)
+                ? 0
+                : place.getCount_current_visitors();
+
+        // prevent negatives
+        place.setCount_current_visitors(Math.max(0, current - 1));
         placeRepository.save(place);
 
+         trip.setFinish(Instant.now());
+         tripRepository.save(trip);
     }
 
     public Map<String, String> shareTrip(Integer tripId) {

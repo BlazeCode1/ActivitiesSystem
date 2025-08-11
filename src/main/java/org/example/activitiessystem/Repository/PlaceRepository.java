@@ -51,5 +51,8 @@ public interface PlaceRepository  extends JpaRepository<Place,Integer> {
              Instant now
     );
 
+    boolean existsByNameIgnoreCaseAndDistrictIgnoreCase(String name, String district);
+    boolean existsByLocation(String location);
+
     List<Place> findByDistrict(String district);
 }
